@@ -41,12 +41,6 @@ export default function ChatTab() {
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!geminiKey || geminiKey.includes("tu_")) {
-      setApiError("Configurá VITE_GEMINI_API_KEY en .env para usar el chat");
-      return;
-    }
-
     setApiError(null);
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
