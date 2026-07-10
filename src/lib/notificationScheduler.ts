@@ -22,7 +22,7 @@ export interface ScheduledReminder {
 
 let activeReminders: ScheduledReminder[] = [];
 
-function getSettings(): NotificationSettings {
+export function getSettings(): NotificationSettings {
   try {
     return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {
       medications: true,

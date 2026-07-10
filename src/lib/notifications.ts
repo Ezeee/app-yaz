@@ -14,26 +14,26 @@ export async function requestPermission(): Promise<NotificationPermission> {
   return await Notification.requestPermission();
 }
 
+type ExtendedNotificationOptions = NotificationOptions & { vibrate?: number[] };
+
 export function sendNotification(
   title: string,
   options?: NotificationOptions
 ): void {
   if (getPermission() !== "granted") return;
 
+  const extendedOptions: ExtendedNotificationOptions = {
+    icon: "/favicon.svg",
+    vibrate: [200, 100, 200],
+    ...options,
+  };
+
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.ready.then((reg) => {
-      reg.showNotification(`${APP_NAME} - ${title}`, {
-        icon: "/favicon.svg",
-        badge: "/favicon.svg",
-        vibrate: [200, 100, 200],
-        ...options,
-      });
+      reg.showNotification(`${APP_NAME} - ${title}`, extendedOptions);
     });
   } else {
-    new Notification(`${APP_NAME} - ${title}`, {
-      icon: "/favicon.svg",
-      ...options,
-    });
+    new Notification(`${APP_NAME} - ${title}`, extendedOptions);
   }
 }
 
