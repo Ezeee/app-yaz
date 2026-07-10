@@ -67,12 +67,17 @@ export default function PeriodTab() {
     const today = toDateString(new Date());
     const newPeriod = { start_date: today, end_date: null };
 
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from("periods").insert(newPeriod);
-    } else {
-      await localDb.from("periods").insert(newPeriod);
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.from("periods").insert(newPeriod);
+        if (error) throw error;
+      } else {
+        await localDb.from("periods").insert(newPeriod);
+      }
+      await loadData();
+    } catch (err) {
+      console.error("Error starting period:", err);
     }
-    loadData();
   };
 
   const handleEndPeriod = async () => {
@@ -81,12 +86,17 @@ export default function PeriodTab() {
     if (latest.end_date) return;
 
     const today = toDateString(new Date());
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from("periods").update({ end_date: today }).eq("id", latest.id);
-    } else {
-      await localDb.from("periods").update({ end_date: today }).eq("id", latest.id);
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.from("periods").update({ end_date: today }).eq("id", latest.id);
+        if (error) throw error;
+      } else {
+        await localDb.from("periods").update({ end_date: today }).eq("id", latest.id);
+      }
+      await loadData();
+    } catch (err) {
+      console.error("Error ending period:", err);
     }
-    loadData();
   };
 
   const handleSaveSymptom = async (data: {
@@ -95,13 +105,18 @@ export default function PeriodTab() {
     symptoms: string[];
     notes: string;
   }) => {
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from("cycle_symptoms").upsert(data, { onConflict: "date" });
-    } else {
-      await localDb.fromUpsert("cycle_symptoms", "date").upsert(data);
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.from("cycle_symptoms").upsert(data, { onConflict: "date" });
+        if (error) throw error;
+      } else {
+        await localDb.fromUpsert("cycle_symptoms", "date").upsert(data);
+      }
+      setShowSymptomLogger(false);
+      await loadData();
+    } catch (err) {
+      console.error("Error saving symptom:", err);
     }
-    setShowSymptomLogger(false);
-    loadData();
   };
 
   if (loading) {

@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { localDb } from "../../lib/localDb";
 import type { Profile, Doctor } from "../../types";
-import { Save, Plus, Trash2, User } from "lucide-react";
+import { Save, Plus, Trash2, User, Bell, Send } from "lucide-react";
+import { getPermission, requestPermission, sendNotification, hasNotificationSupport } from "../../lib/notifications";
+import { saveSettings, rescheduleAll, getSettings } from "../../lib/notificationScheduler";
 
 export default function ProfileTab() {
   const [profile, setProfile] = useState<Partial<Profile>>({});
@@ -10,9 +12,12 @@ export default function ProfileTab() {
   const [saved, setSaved] = useState(false);
   const [newDoctorName, setNewDoctorName] = useState("");
   const [newDoctorSpecialty, setNewDoctorSpecialty] = useState("");
+  const [notifSettings, setNotifSettings] = useState(getSettings());
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
     loadProfile();
+    setNotifPermission(getPermission());
   }, []);
 
   const loadProfile = async () => {
@@ -221,6 +226,91 @@ export default function ProfileTab() {
           placeholder="Cualquier otra información relevante..."
         />
       </section>
+
+      {/* Recordatorios */}
+      <section className="bg-card border border-border rounded-2xl p-4 space-y-3">
+        <h3 className="font-bold text-text text-sm flex items-center gap-2">
+          <Bell size={16} className="text-primary" /> Recordatorios
+        </h3>
+
+        {!hasNotificationSupport() && (
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
+            Tu navegador no soporta notificaciones.
+          </p>
+        )}
+
+        {hasNotificationSupport() && notifPermission === "denied" && (
+          <p className="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2">
+            Las notificaciones están bloqueadas. Habilitalas en la configuración de tu navegador.
+          </p>
+        )}
+
+        {hasNotificationSupport() && notifPermission === "default" && (
+          <button
+            onClick={async () => {
+              const result = await requestPermission();
+              setNotifPermission(result);
+              if (result === "granted") {
+                await rescheduleAll();
+              }
+            }}
+            className="w-full bg-primary text-white py-2.5 rounded-xl text-sm font-medium hover:bg-primary-vibrant transition-colors flex items-center justify-center gap-2"
+          >
+            <Bell size={16} />
+            Activar notificaciones
+          </button>
+        )}
+
+        {hasNotificationSupport() && notifPermission === "granted" && (
+          <>
+            <ToggleRow
+              label="Recordatorios de medicamentos"
+              checked={notifSettings.medications}
+              onChange={(val) => {
+                const next = { ...notifSettings, medications: val };
+                setNotifSettings(next);
+                saveSettings(next);
+                rescheduleAll();
+              }}
+            />
+            <ToggleRow
+              label="Recordatorios de turnos"
+              checked={notifSettings.appointments}
+              onChange={(val) => {
+                const next = { ...notifSettings, appointments: val };
+                setNotifSettings(next);
+                saveSettings(next);
+                rescheduleAll();
+              }}
+            />
+            <button
+              onClick={() => {
+                sendNotification("Test", { body: "Si ves esto, las notificaciones funcionan." });
+              }}
+              className="w-full border border-primary text-primary py-2 rounded-xl text-xs font-medium hover:bg-primary-light transition-colors flex items-center justify-center gap-2"
+            >
+              <Send size={14} />
+              Probar notificación
+            </button>
+          </>
+        )}
+      </section>
     </div>
+  );
+}
+
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (val: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between cursor-pointer">
+      <span className="text-sm text-text">{label}</span>
+      <div
+        className={`relative w-10 h-5 rounded-full transition-colors ${checked ? "bg-primary" : "bg-gray-300"}`}
+        onClick={() => onChange(!checked)}
+      >
+        <div
+          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : ""}`}
+        />
+      </div>
+    </label>
   );
 }

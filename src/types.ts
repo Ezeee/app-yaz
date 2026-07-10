@@ -57,7 +57,7 @@ export interface Solicitud {
   created_at: string;
 }
 
-export type TabId = "calendar" | "medications" | "chat" | "solicitudes" | "period" | "settings";
+export type TabId = "calendar" | "medications" | "chat" | "solicitudes" | "period" | "settings" | "documents";
 
 export interface Period {
   id: string;
@@ -76,3 +76,16 @@ export interface CycleSymptom {
 }
 
 export type CyclePhase = "menstrual" | "follicular" | "ovulation" | "luteal";
+
+export interface MedicalDocument {
+  id: string;
+  title: string;
+  description: string;
+  file_name: string;
+  file_type: "image" | "pdf";
+  mime_type: string;
+  file_path: string;
+  solicitud_id: string | null;
+  tags: string[];
+  created_at: string;
+}

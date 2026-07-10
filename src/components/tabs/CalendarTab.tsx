@@ -3,7 +3,9 @@ import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { localDb } from "../../lib/localDb";
 import type { Appointment } from "../../types";
 import AppointmentForm from "../AppointmentForm";
-import { Plus, Calendar, MapPin, Trash2, Edit3 } from "lucide-react";
+import { Plus, Calendar, MapPin, Trash2, Edit3, Bell } from "lucide-react";
+import { rescheduleAll } from "../../lib/notificationScheduler";
+import { hasNotificationSupport } from "../../lib/notifications";
 
 export default function CalendarTab() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -50,6 +52,7 @@ export default function CalendarTab() {
     setShowForm(false);
     setEditing(null);
     loadAppointments();
+    rescheduleAll();
   };
 
   const handleDelete = async (id: string) => {
@@ -60,6 +63,7 @@ export default function CalendarTab() {
         await localDb.from("appointments").delete().eq("id", id);
       }
       loadAppointments();
+      rescheduleAll();
     }
   };
 
@@ -125,6 +129,11 @@ export default function CalendarTab() {
                 {apt.source === "scanned" && (
                   <span className="inline-block mt-1 text-[10px] bg-primary-light text-primary px-2 py-0.5 rounded-full">
                     Escaneado
+                  </span>
+                )}
+                {hasNotificationSupport() && Notification.permission === "granted" && new Date(apt.date) > new Date() && (
+                  <span className="inline-block mt-1 text-[10px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
+                    <Bell size={10} /> Recordatorio
                   </span>
                 )}
               </div>

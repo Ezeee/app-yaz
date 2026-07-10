@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Calendar, Pill, MessageCircle, Droplets, Settings, ClipboardList } from "lucide-react";
+import { Calendar, Pill, MessageCircle, Droplets, Settings, ClipboardList, FileText } from "lucide-react";
 import type { TabId } from "../types";
 
 interface LayoutProps {
@@ -13,6 +13,7 @@ const tabs: { id: TabId; label: string; icon: typeof Calendar }[] = [
   { id: "medications", label: "Pastillas", icon: Pill },
   { id: "chat", label: "Chat", icon: MessageCircle },
   { id: "period", label: "Período", icon: Droplets },
+  { id: "documents", label: "Docs", icon: FileText },
 ];
 
 export default function Layout({ children, activeTab, onTabChange }: LayoutProps) {

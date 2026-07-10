@@ -3,7 +3,9 @@ import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { localDb } from "../../lib/localDb";
 import type { Medication } from "../../types";
 import MedicationForm from "../MedicationForm";
-import { Plus, Pill, Trash2, Edit3, Clock } from "lucide-react";
+import { Plus, Pill, Trash2, Edit3, Clock, Bell } from "lucide-react";
+import { rescheduleAll } from "../../lib/notificationScheduler";
+import { hasNotificationSupport } from "../../lib/notifications";
 
 export default function MedicationsTab() {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -46,6 +48,7 @@ export default function MedicationsTab() {
     setShowForm(false);
     setEditing(null);
     loadMedications();
+    rescheduleAll();
   };
 
   const handleDelete = async (id: string) => {
@@ -56,6 +59,7 @@ export default function MedicationsTab() {
         await localDb.from("medications").delete().eq("id", id);
       }
       loadMedications();
+      rescheduleAll();
     }
   };
 
@@ -67,6 +71,7 @@ export default function MedicationsTab() {
       await localDb.from("medications").update(updates).eq("id", med.id);
     }
     loadMedications();
+    rescheduleAll();
   };
 
   return (
@@ -138,6 +143,11 @@ export default function MedicationsTab() {
                         <Clock size={10} /> {time}
                       </span>
                     ))}
+                    {hasNotificationSupport() && Notification.permission === "granted" && med.active && (
+                      <span className="text-[10px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Bell size={10} /> Recordatorio
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
